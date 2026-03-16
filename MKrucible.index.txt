@@ -1,0 +1,575 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="The Crucible">
+<title>ATOM — The Crucible</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{--red:#c0392b;--gold:#d4a017;--bg:#0a0a0a;--card:#111;--border:#222;--text:#e8e8e8;--muted:#888;--green:#27ae60}
+html,body{background:var(--bg);color:var(--text);font-family:'Helvetica Neue',Arial,sans-serif;min-height:100vh;overflow-x:hidden}
+#entry{display:flex;flex-direction:column;align-items:center;min-height:100vh;padding:2rem 1.2rem 3rem;overflow-y:auto}
+.e-badge{background:var(--red);color:#fff;font-size:10px;font-weight:800;letter-spacing:.2em;padding:5px 14px;border-radius:2px;margin-bottom:1.5rem;text-transform:uppercase}
+.e-title{font-size:clamp(2.8rem,10vw,5rem);font-weight:900;letter-spacing:.05em;text-transform:uppercase;line-height:1;text-align:center;color:#fff}
+.e-sub{font-size:11px;letter-spacing:.25em;color:var(--muted);margin-top:.5rem;text-align:center;text-transform:uppercase}
+.e-line{width:60px;height:2px;background:var(--red);margin:1.8rem auto}
+.e-disc{background:#111;border:1px solid #222;border-radius:8px;padding:1.2rem;margin-bottom:1.2rem;width:100%;max-width:500px}
+.e-disc-title{font-size:11px;font-weight:700;letter-spacing:.15em;color:var(--red);text-transform:uppercase;margin-bottom:.4rem}
+.e-disc-body{font-size:13px;color:#aaa;line-height:1.6}
+.checks{width:100%;max-width:500px;margin-bottom:1.5rem}
+.chk{display:flex;align-items:flex-start;gap:14px;padding:14px;background:#111;border:1px solid #222;border-radius:8px;margin-bottom:10px;cursor:pointer;transition:border-color .2s}
+.chk.done{border-color:var(--red)}
+.chk-box{width:24px;height:24px;min-width:24px;border:2px solid #444;border-radius:4px;display:flex;align-items:center;justify-content:center;transition:all .2s;margin-top:1px}
+.chk.done .chk-box{background:var(--red);border-color:var(--red)}
+.chk-check{color:#fff;font-size:14px;font-weight:700;display:none}
+.chk.done .chk-check{display:block}
+.chk-label{font-size:13px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#ccc;margin-bottom:3px}
+.chk.done .chk-label{color:#fff}
+.chk-sub{font-size:12px;color:var(--muted);line-height:1.5}
+.enter-btn{background:#333;color:#666;border:none;padding:16px 40px;font-size:13px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;border-radius:6px;width:100%;max-width:500px;cursor:not-allowed;transition:all .3s}
+.enter-btn.ready{background:var(--red);color:#fff;cursor:pointer}
+#app{display:none;flex-direction:column;min-height:100vh;padding-bottom:70px}
+.app-header{background:#0d0d0d;border-bottom:1px solid #1a1a1a;padding:14px 16px;position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between}
+.app-logo{font-size:16px;font-weight:900;letter-spacing:.15em;text-transform:uppercase}
+.app-logo span{color:var(--red)}
+.app-logo em{font-style:normal;color:var(--muted);font-size:11px;font-weight:400;letter-spacing:.1em;display:block}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#0d0d0d;border-top:1px solid #1a1a1a;display:flex;z-index:100}
+.bnav-btn{flex:1;padding:10px 4px 8px;background:none;border:none;color:var(--muted);font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;transition:color .2s}
+.bnav-btn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.bnav-btn.active{color:var(--red)}
+.tab{display:none;padding:16px}
+.tab.active{display:block}
+.sh{margin-bottom:1.2rem}
+.sh-eye{font-size:10px;letter-spacing:.2em;color:var(--red);text-transform:uppercase;margin-bottom:4px}
+.sh-title{font-size:clamp(1.6rem,5vw,2.4rem);font-weight:900;letter-spacing:.05em;text-transform:uppercase;line-height:1}
+.phase-toggle{display:flex;gap:8px;margin-bottom:1.2rem}
+.ph-btn{flex:1;padding:10px;background:#111;border:1px solid #222;border-radius:6px;color:var(--muted);font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:all .2s}
+.ph-btn.active{background:var(--red);border-color:var(--red);color:#fff}
+.ph-btn.mass-btn.active{background:#1a5276;border-color:#1a5276;color:#fff}
+.days-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.day-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
+.day-card:active{transform:scale(.97)}
+.day-card.rest-day{opacity:.7}
+.day-num{font-size:10px;letter-spacing:.15em;color:var(--muted);text-transform:uppercase;margin-bottom:4px}
+.day-name{font-size:14px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;line-height:1.2;margin-bottom:6px}
+.day-badge{display:inline-block;background:var(--red);color:#fff;font-size:9px;font-weight:700;letter-spacing:.1em;padding:3px 8px;border-radius:3px;text-transform:uppercase}
+.day-badge.rest{background:#333;color:#888}
+.day-badge.storm{background:var(--gold);color:#000}
+.day-prog{margin-top:10px;height:3px;background:#222;border-radius:2px}
+.day-prog-fill{height:100%;background:var(--red);border-radius:2px;transition:width .3s}
+.day-macro{font-size:10px;color:var(--muted);margin-top:6px}
+.day-macro span{color:var(--text)}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:200;display:none;flex-direction:column;overflow:hidden}
+.modal.open{display:flex}
+.modal-head{background:#0d0d0d;border-bottom:1px solid #1a1a1a;padding:14px 16px;display:flex;align-items:center;gap:12px;position:sticky;top:0}
+.modal-close{background:none;border:1px solid #333;color:#888;width:36px;height:36px;border-radius:6px;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.modal-title{font-size:14px;font-weight:800;letter-spacing:.1em;text-transform:uppercase}
+.modal-sub{font-size:10px;color:var(--muted);letter-spacing:.1em}
+.modal-body{overflow-y:auto;-webkit-overflow-scrolling:touch;flex:1;padding:16px}
+.session-block{margin-bottom:1.5rem}
+.session-label{font-size:10px;letter-spacing:.2em;color:var(--red);text-transform:uppercase;font-weight:700;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #1a1a1a}
+.ex-row{display:flex;align-items:center;gap:12px;padding:12px;background:#111;border:1px solid #1a1a1a;border-radius:8px;margin-bottom:8px;cursor:pointer;transition:all .2s}
+.ex-row.done-ex{background:#0d1f0d;border-color:#1a3d1a}
+.ex-check{width:22px;height:22px;min-width:22px;border:2px solid #333;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:transparent;transition:all .2s}
+.ex-row.done-ex .ex-check{background:var(--green);border-color:var(--green);color:#fff}
+.ex-info{flex:1}
+.ex-name{font-size:13px;font-weight:700;color:#e0e0e0;margin-bottom:2px}
+.ex-sets{font-size:12px;color:var(--muted)}
+.ex-note{font-size:11px;color:var(--gold);margin-top:2px}
+.law-card{background:#111;border:1px solid #1a1a1a;border-radius:8px;padding:14px;margin-bottom:10px}
+.law-title{font-size:11px;font-weight:800;letter-spacing:.15em;color:var(--gold);text-transform:uppercase;margin-bottom:6px}
+.law-title.red{color:var(--red)}
+.law-body{font-size:13px;color:#aaa;line-height:1.6}
+.law-grid{display:grid;gap:8px;margin-bottom:1.2rem}
+.rule-row{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:10px 14px;background:#111;border:1px solid #1a1a1a;border-radius:6px}
+.rule-l{font-size:11px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;min-width:90px}
+.rule-v{font-size:12px;font-weight:700;color:#e0e0e0;text-align:right}
+.rule-v.zero{color:var(--red)}
+.macro-table{width:100%;border-collapse:collapse;margin-bottom:1.2rem}
+.macro-table th{font-size:9px;letter-spacing:.15em;color:var(--muted);text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #1a1a1a;text-align:left}
+.macro-table td{padding:10px 6px;border-bottom:1px solid #111;font-size:12px}
+.macro-table tr:last-child td{border-bottom:none}
+.macro-table .day-col{font-weight:700;color:#ccc}
+.macro-table .p-col{color:#e74c3c}
+.macro-table .c-col{color:#f39c12}
+.macro-table .f-col{color:#27ae60}
+.macro-table tr.rest-row td{color:var(--muted)}
+.prog-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1.2rem}
+.prog-stat{background:#111;border:1px solid #1a1a1a;border-radius:8px;padding:14px;text-align:center}
+.prog-stat-n{font-size:2rem;font-weight:900;color:var(--red);line-height:1}
+.prog-stat-l{font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-top:4px}
+.prog-bar-wrap{background:#111;border:1px solid #1a1a1a;border-radius:8px;padding:14px;margin-bottom:10px}
+.prog-bar-label{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:8px}
+.prog-bar{height:8px;background:#222;border-radius:4px;overflow:hidden}
+.prog-bar-fill{height:100%;background:var(--red);border-radius:4px;transition:width .6s}
+#toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);background:#222;color:#fff;padding:10px 20px;border-radius:20px;font-size:12px;font-weight:600;letter-spacing:.05em;opacity:0;transition:all .3s;pointer-events:none;z-index:999;white-space:nowrap}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#toast.green{background:var(--green)}
+.steam-law{background:linear-gradient(135deg,#1a1200,#2a1e00);border:1px solid var(--gold);border-radius:8px;padding:14px;margin-bottom:10px}
+.steam-law .law-title{color:var(--gold)}
+.recovery-law{background:linear-gradient(135deg,#0d1a0d,#0a150a);border:1px solid #1a4a1a;border-radius:8px;padding:14px;margin-bottom:10px}
+.recovery-law .law-title{color:#27ae60}
+.cut-banner{background:linear-gradient(135deg,#1a0a0a,#220e0e);border:1px solid #3a1515;border-radius:8px;padding:12px 14px;margin-bottom:1.2rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+.cut-banner-item{text-align:center}
+.cut-banner-n{font-size:1.4rem;font-weight:900;color:var(--red);line-height:1}
+.cut-banner-l{font-size:9px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-top:2px}
+</style>
+</head>
+<body>
+
+<div id="entry">
+ <div style="margin-bottom:.5rem;margin-top:.5rem">
+   <div class="e-badge">ATOM © 2026 · Master Edition</div>
+ </div>
+ <div class="e-title">THE<br>CRUCIBLE</div>
+ <div class="e-sub">9-Day Canon · Read Before Entering</div>
+ <div class="e-line"></div>
+ <div class="e-disc" style="max-width:500px;width:100%">
+   <div class="e-disc-title">⚠ Medical & Liability Disclaimer</div>
+   <div class="e-disc-body">This program was built for a specific individual under Maestro's guidance. Consult a qualified medical professional before beginning any training program. ATOM Body Physics©, its creator, and all affiliated parties expressly disclaim all liability. Not medical advice. You participate entirely at your own risk.</div>
+ </div>
+ <div class="checks" id="checks"></div>
+ <button class="enter-btn" id="enter-btn" onclick="enterApp()">ENTER THE CRUCIBLE</button>
+</div>
+
+<div id="app">
+ <div class="app-header">
+   <div class="app-logo">AT<span>O</span>M <em>· The Crucible · 9-Day Canon</em></div>
+ </div>
+
+ <div class="tab active" id="tab-training">
+   <div class="sh"><div class="sh-eye">ATOM Body Physics©</div><div class="sh-title">Training Protocol</div></div>
+   <div class="days-grid" id="days-grid"></div>
+ </div>
+
+ <div class="tab" id="tab-nutrition">
+   <div class="sh"><div class="sh-eye">Fueling Strategy</div><div class="sh-title">Nutrition</div></div>
+   <div class="phase-toggle">
+     <button class="ph-btn active" id="ph-cut" onclick="setPhase('cut')">✦ Cut Phase</button>
+     <button class="ph-btn mass-btn" id="ph-mass" onclick="setPhase('mass')">Mass Phase</button>
+   </div>
+   <div class="cut-banner" id="cut-banner"></div>
+   <div id="nutrition-content"></div>
+ </div>
+
+ <div class="tab" id="tab-laws">
+   <div class="sh"><div class="sh-eye">Standing Orders</div><div class="sh-title">The Laws</div></div>
+   <div id="laws-content"></div>
+ </div>
+
+ <div class="tab" id="tab-progress">
+   <div class="sh"><div class="sh-eye">ATOM Body Physics©</div><div class="sh-title">Progress</div></div>
+   <div class="prog-stats" id="prog-stats"></div>
+   <div id="prog-bars"></div>
+ </div>
+
+ <nav class="bottom-nav">
+   <button class="bnav-btn active" onclick="showTab('training',this)">
+     <svg viewBox="0 0 24 24"><path d="M6 4v16M18 4v16M6 12h12"/></svg>Training
+   </button>
+   <button class="bnav-btn" onclick="showTab('nutrition',this)">
+     <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>Nutrition
+   </button>
+   <button class="bnav-btn" onclick="showTab('laws',this)">
+     <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>Laws
+   </button>
+   <button class="bnav-btn" onclick="showTab('progress',this)">
+     <svg viewBox="0 0 24 24"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg>Progress
+   </button>
+ </nav>
+</div>
+
+<div class="modal" id="day-modal">
+ <div class="modal-head">
+   <button class="modal-close" onclick="closeModal()">✕</button>
+   <div>
+     <div class="modal-title" id="modal-title"></div>
+     <div class="modal-sub" id="modal-sub"></div>
+   </div>
+ </div>
+ <div class="modal-body" id="modal-body"></div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const CHECKS = [
+ {id:'c1',label:'I understand this is a personal training protocol',sub:'Built for a specific individual. Exercises, weights, and macros reflect that person\'s capacity, history, and goals — not general recommendations.'},
+ {id:'c2',label:'I accept full responsibility for my training',sub:'I acknowledge the physical demands and take complete responsibility for executing it safely. I will modify or stop if I experience pain or adverse symptoms.'},
+ {id:'c3',label:'I understand the nutrition and supplementation guidelines',sub:'Macros, Metformin protocol, and all standing nutrition laws are specific to this canon. READ ONLY — no changes without Maestro\'s explicit approval.'},
+ {id:'c4',label:'I am ready to enter the Crucible',sub:'I commit to executing this program with full effort and proficiency. The work begins now.'}
+];
+
+const DAYS = [
+ {
+   id:'d1',day:1,name:'Heavy Chest',badge:'Heavy Chest',cls:'',
+   cutMacros:{p:200,c:210,f:'—'},massMacros:{p:200,c:350,f:100},
+   sessions:[
+     {label:'AM Session',exercises:[
+       {name:'Row',sets:'1 Hour',note:''},
+       {name:'Chest Flyes',sets:'2×40 @ 45lb',note:'All Incline'},
+       {name:'Chest Presses',sets:'2×20 @ 50lb',note:'All Incline'},
+       {name:'Chest Crushes',sets:'2×40 @ 50lb',note:'Mid + Flat Incline'},
+       {name:'Reverse DB Fly',sets:'2×40 @ 50lb',note:''},
+       {name:'Chest Overheads',sets:'2×40 @ 50lb',note:''}
+     ]},
+     {label:'PM Session',exercises:[
+       {name:'Arnold Presses',sets:'60 reps @ 20lb',note:'Before Every Lat Lift'},
+       {name:'Lat Lifts',sets:'2×15 + 1×10 @ 10lb / 15lb',note:''},
+       {name:'Bicep Curls',sets:'2×40 @ 10lb',note:''},
+       {name:'Hammer Curls',sets:'2×40 @ 20lb',note:''},
+       {name:'Landmine RDL',sets:'2×40 @ 72lb',note:''}
+     ]},
+     {label:'Finisher',exercises:[
+       {name:'Ab Coaster',sets:'3×20 @ 40lb',note:'All 3 Sides'}
+     ]}
+   ]
+ },
+ {
+   id:'d2',day:2,name:'The Arsenal',badge:'Arsenal',cls:'',
+   cutMacros:{p:200,c:225,f:'—'},massMacros:{p:200,c:375,f:100},
+   sessions:[
+     {label:'Training',exercises:[
+       {name:'Prone Lifts',sets:'2×20 @ 20lb',note:''},
+       {name:'Arnold Presses',sets:'60 reps @ 20lb',note:''},
+       {name:'Side Bends',sets:'80 reps @ 45lb',note:''},
+       {name:'Serratus Punches',sets:'80 reps each arm @ 45lb',note:''},
+       {name:'Lat Lifts — Sides',sets:'2×40 @ 25lb',note:''},
+       {name:'Lat Lifts — Fronts',sets:'2×40 @ 25lb',note:''},
+       {name:'Lat Lifts — Rears',sets:'2×40 @ 25lb',note:''},
+       {name:'Shoulder Shrugs',sets:'80 reps @ 50lb',note:''},
+       {name:'Ab Coaster',sets:'3×20 @ 40lb',note:'All 3 Sides'},
+       {name:'Romanian Deadlift',sets:'2×40 @ 95lb',note:'Bar + both 25s'},
+       {name:'Suitcase Carries',sets:'3×20 steps per side @ 50lb',note:''}
+     ]},
+     {label:'Cardio',exercises:[
+       {name:'Row',sets:'30 min',note:''},
+       {name:'Incline Treadmill',sets:'30 min',note:''}
+     ]}
+   ]
+ },
+ {
+   id:'d3',day:3,name:'Heavy Chest',badge:'Heavy Chest',cls:'',
+   cutMacros:{p:200,c:210,f:'—'},massMacros:{p:200,c:350,f:100},
+   sessions:[
+     {label:'AM Session',exercises:[
+       {name:'Row',sets:'1 Hour',note:''},
+       {name:'Chest Flyes',sets:'2×40 @ 45lb',note:'All Incline'},
+       {name:'Chest Presses',sets:'2×20 @ 50lb',note:'All Incline'},
+       {name:'Chest Crushes',sets:'2×40 @ 50lb',note:'Mid + Flat Incline'},
+       {name:'Reverse DB Fly',sets:'2×40 @ 50lb',note:''},
+       {name:'Chest Overheads',sets:'2×40 @ 50lb',note:''}
+     ]},
+     {label:'PM Session',exercises:[
+       {name:'Arnold Presses',sets:'60 reps @ 20lb',note:'Before Every Lat Lift'},
+       {name:'Lat Lifts',sets:'2×15 + 1×10 @ 10lb / 15lb',note:''},
+       {name:'Tricep Blasts',sets:'2×40 @ 25lb',note:''},
+       {name:'Overhead Tricep',sets:'2×40 @ 20lb',note:''},
+       {name:'Landmine RDL',sets:'2×40 @ 72lb',note:''}
+     ]},
+     {label:'Finisher',exercises:[
+       {name:'Ab Coaster',sets:'3×20 @ 40lb',note:'All 3 Sides'}
+     ]}
+   ]
+ },
+ {
+   id:'d4',day:4,name:'Eye of the Storm',badge:'Eye of Storm',cls:'storm',
+   cutMacros:{p:200,c:175,f:'—'},massMacros:{p:200,c:275,f:100},
+   sessions:[
+     {label:'Training',exercises:[
+       {name:'Prone Lifts',sets:'2×20 @ 20lb',note:''},
+       {name:'Side Bends',sets:'80 reps @ 45lb',note:''},
+       {name:'Serratus Punches',sets:'80 reps each arm @ 45lb',note:''},
+       {name:'Landmine Upright Row',sets:'2×40 @ 67lb',note:''},
+       {name:'Suitcase Carries',sets:'3×20 steps per side @ 50lb',note:''},
+       {name:'Ab Coaster',sets:'3×20 @ 40lb',note:'All 3 Sides'},
+       {name:'Hybrid Arnolds',sets:'4×20 @ 10lb',note:''},
+       {name:'Shoulder Shrug Hybrid',sets:'3×40 @ 25lb',note:''},
+       {name:'Landmine Lateral Raise',sets:'3×25 @ 50lb each arm',note:''},
+       {name:'Single Arm Landmine Press',sets:'3×25 @ 50lb each arm',note:''}
+     ]},
+     {label:'★ Steam Law',exercises:[
+       {name:'STEAM LAW ACTIVATES',sets:'If Days 1–4 all proficiently executed',note:'No PM. No Arms.'}
+     ]}
+   ]
+ },
+ {
+   id:'d5',day:5,name:'Storm Opens',badge:'Hybrid Chest',cls:'storm',
+   cutMacros:{p:200,c:250,f:'—'},massMacros:{p:200,c:400,f:100},
+   sessions:[
+     {label:'Training',exercises:[
+       {name:'Chest Flyes',sets:'2×40 @ 25lb',note:'3 Inclines'},
+       {name:'Chest Presses',sets:'2×40 @ 25lb',note:'3 Inclines'},
+       {name:'Chest Crushes',sets:'2×40 @ 25lb',note:'Mid + Flat Incline'},
+       {name:'Reverse DB Fly',sets:'3×40 @ 25lb',note:'Flat'},
+       {name:'Chest Overheads',sets:'2×40 @ 25lb',note:'Flat + Incline'},
+       {name:'Arnold Presses',sets:'60 reps @ 20lb',note:'Before Lat Pulls'},
+       {name:'Lat Pulls',sets:'180 reps @ 40lb',note:''},
+       {name:'Landmine Upright Row',sets:'2×20 @ 67lb',note:'Both Arms'},
+       {name:'Shoulder Shrug Hybrid',sets:'3×40 @ 25lb',note:'Shrug + upright row combo — upper & mid trap'},
+       {name:'Arnold Press Hybrid',sets:'3×25 @ 20lb',note:'Clavicular tie-in focus'},
+       {name:'Bicep Curls',sets:'80 reps @ 45lb',note:''},
+       {name:'Hammer Curls',sets:'3×10 @ 40lb',note:''},
+       {name:'Tricep Blast',sets:'3×10 @ 40lb',note:''},
+       {name:'Overhead Tricep',sets:'3×10 @ 35lb',note:''},
+       {name:'Tower Decompression',sets:'4 hang positions',note:''},
+       {name:'Sunny Glider',sets:'45 min @ Level 12',note:'Sparthos Mask T2'}
+     ]},
+     {label:'Finisher',exercises:[
+       {name:'Ab Coaster',sets:'3×20 @ 40lb',note:'All 3 Sides'}
+     ]}
+   ]
+ },
+ {
+   id:'d6',day:6,name:'Storm Closes',badge:'Hybrid Condensed',cls:'',
+   cutMacros:{p:200,c:200,f:'—'},massMacros:{p:200,c:325,f:100},
+   sessions:[
+     {label:'Training',exercises:[
+       {name:'Stamina Row',sets:'1 Hour',note:'No Mask'},
+       {name:'Arnold Presses',sets:'60 reps @ 20lb',note:'Before Lat Pulls'},
+       {name:'Lat Pulls',sets:'180 reps @ 40lb',note:''},
+       {name:'Landmine Upright Row',sets:'2×20 @ 67lb',note:'Both Arms'},
+       {name:'Shoulder Shrug Hybrid',sets:'3×40 @ 25lb',note:'Shrug + upright row combo — upper & mid trap'},
+       {name:'Arnold Press Hybrid',sets:'3×25 @ 20lb',note:'Clavicular tie-in focus'},
+       {name:'Bicep Curls',sets:'80 reps @ 45lb',note:''},
+       {name:'Tricep Blast',sets:'3×10 @ 40lb',note:''},
+       {name:'Overhead Tricep',sets:'3×10 @ 35lb',note:''},
+       {name:'Lat Lifts',sets:'2×15 + 1×10 @ 10lb / 15lb',note:''},
+       {name:'Sunny Glider',sets:'45 min',note:'Sparthos Mask T2'}
+     ]},
+     {label:'★ Day 6 Recovery Protocol',exercises:[
+       {name:'Steam',sets:'Full session',note:''},
+       {name:'Zero Gravity Chair',sets:'15 min',note:''},
+       {name:'Shower',sets:'Cold finish',note:''},
+       {name:'Cyclobenzaprine',sets:'Night dose',note:'Full cycle reset'}
+     ]}
+   ]
+ },
+ {
+   id:'d7',day:7,name:'Reclamation',badge:'Rest 1',cls:'rest-day',
+   cutMacros:{p:180,c:125,f:'—'},massMacros:{p:180,c:200,f:100},
+   sessions:[
+     {label:'Rest Day 1',exercises:[
+       {name:'No Resistance Training',sets:'Full rest',note:''},
+       {name:'Light Movement Only',sets:'Walks · Stretching · Tower Decompression',note:''},
+       {name:'Protein drops to 180g',sets:'',note:'The body repairs during rest'}
+     ]}
+   ]
+ },
+ {
+   id:'d8',day:8,name:'Reclamation',badge:'Rest 2',cls:'rest-day',
+   cutMacros:{p:180,c:125,f:'—'},massMacros:{p:180,c:200,f:100},
+   sessions:[
+     {label:'Rest Day 2 — Naproxen',exercises:[
+       {name:'Naproxen Protocol Active',sets:'As needed',note:''},
+       {name:'No Resistance Training',sets:'Full rest',note:''},
+       {name:'Hydrate Aggressively',sets:'Gallon+',note:'Sleep is the protocol'}
+     ]}
+   ]
+ },
+ {
+   id:'d9',day:9,name:'Reclamation',badge:'Rest 3',cls:'rest-day',
+   cutMacros:{p:180,c:125,f:'—'},massMacros:{p:180,c:200,f:100},
+   sessions:[
+     {label:'Rest Day 3 — Cycle Closes',exercises:[
+       {name:'The Crucible is Complete',sets:'Full recovery',note:''},
+       {name:'No Resistance Training',sets:'Light movement permitted',note:''},
+       {name:'Day 9 Closes the Canon',sets:'Cycle resets on Day 10',note:'Protect the work'}
+     ]}
+   ]
+ }
+];
+
+const STANDING_RULES = [
+ {l:'Protein Floor',v:'180g daily'},
+ {l:'Protein Shake Baseline',v:'125g daily'},
+ {l:'Olive Oil',v:'2 tsp daily — MANDATORY'},
+ {l:'Metformin',v:'1000mg daily'},
+ {l:'Sugar Alcohols',v:'ZERO TOLERANCE',zero:true},
+ {l:'Carb Tracking',v:'Energetic carbs only — vegetables/fruit structural, not logged'},
+ {l:'Macro Tolerance',v:'1–2g auto-correct'}
+];
+
+let S={checks:{},exDone:{},phase:'cut'};
+try{const r=localStorage.getItem('crucible_s');if(r)S={...S,...JSON.parse(r)};}catch(e){}
+function save(){try{localStorage.setItem('crucible_s',JSON.stringify(S));}catch(e){}}
+
+function renderChecks(){
+ const c=document.getElementById('checks');
+ c.innerHTML=CHECKS.map(ch=>`
+   <div class="chk${S.checks[ch.id]?' done':''}" id="chk-${ch.id}" onclick="toggleCheck('${ch.id}')">
+     <div class="chk-box"><span class="chk-check">✓</span></div>
+     <div><div class="chk-label">${ch.label}</div><div class="chk-sub">${ch.sub}</div></div>
+   </div>`).join('');
+ updateEnterBtn();
+}
+function toggleCheck(id){S.checks[id]=!S.checks[id];save();renderChecks();}
+function updateEnterBtn(){
+ const all=CHECKS.every(c=>S.checks[c.id]);
+ const btn=document.getElementById('enter-btn');
+ btn.classList.toggle('ready',all);btn.disabled=!all;
+}
+function enterApp(){
+ if(!CHECKS.every(c=>S.checks[c.id]))return;
+ document.getElementById('entry').style.display='none';
+ document.getElementById('app').style.display='flex';
+ renderTraining();renderNutrition();renderLaws();renderProgress();
+}
+
+function showTab(name,btn){
+ document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+ document.querySelectorAll('.bnav-btn').forEach(b=>b.classList.remove('active'));
+ document.getElementById('tab-'+name).classList.add('active');
+ btn.classList.add('active');
+}
+
+function renderTraining(){
+ const grid=document.getElementById('days-grid');
+ grid.innerHTML=DAYS.map(d=>{
+   const macros=S.phase==='cut'?d.cutMacros:d.massMacros;
+   const exes=d.sessions.flatMap(s=>s.exercises);
+   const total=exes.length;const done=exes.filter(e=>S.exDone[d.id+'_'+e.name]).length;
+   const pct=total>0?Math.round(done/total*100):0;
+   return `<div class="day-card${d.cls?' '+d.cls:''}" onclick="openDay('${d.id}')">
+     <div class="day-num">Day ${d.day} of 9</div>
+     <div class="day-name">${d.name}</div>
+     <div class="day-badge${d.cls==='rest-day'?' rest':d.cls==='storm'?' storm':''}">${d.badge}</div>
+     <div class="day-macro">P:<span>${macros.p}g</span> C:<span>${macros.c}g</span>${macros.f!=='—'?' F:<span>'+macros.f+'g</span>':''}</div>
+     <div class="day-prog"><div class="day-prog-fill" style="width:${pct}%"></div></div>
+   </div>`;
+ }).join('');
+}
+
+function openDay(id){
+ const d=DAYS.find(x=>x.id===id);
+ document.getElementById('modal-title').textContent=`Day ${d.day} — ${d.name}`;
+ const macros=S.phase==='cut'?d.cutMacros:d.massMacros;
+ document.getElementById('modal-sub').textContent=`Protein: ${macros.p}g · Carbs: ${macros.c}g${macros.f!=='—'?' · Fat: '+macros.f+'g':''}`;
+ let html='';
+ d.sessions.forEach(sess=>{
+   html+=`<div class="session-block"><div class="session-label">${sess.label}</div>`;
+   sess.exercises.forEach(ex=>{
+     const key=id+'_'+ex.name;
+     const done=!!S.exDone[key];
+     html+=`<div class="ex-row${done?' done-ex':''}" onclick="toggleEx('${id}','${ex.name.replace(/'/g,"\\'")}')">
+       <div class="ex-check">✓</div>
+       <div class="ex-info">
+         <div class="ex-name">${ex.name}</div>
+         ${ex.sets?`<div class="ex-sets">${ex.sets}</div>`:''}
+         ${ex.note?`<div class="ex-note">${ex.note}</div>`:''}
+       </div>
+     </div>`;
+   });
+   html+='</div>';
+ });
+ document.getElementById('modal-body').innerHTML=html;
+ document.getElementById('day-modal').classList.add('open');
+}
+
+function toggleEx(dayId,exName){
+ const key=dayId+'_'+exName;
+ S.exDone[key]=!S.exDone[key];save();
+ const rows=document.querySelectorAll('#modal-body .ex-row');
+ rows.forEach(r=>{if(r.querySelector('.ex-name').textContent===exName)r.classList.toggle('done-ex',!!S.exDone[key]);});
+ renderTraining();
+ toast(S.exDone[key]?'Done ✓':'Cleared','green');
+}
+
+function closeModal(){document.getElementById('day-modal').classList.remove('open');}
+document.getElementById('day-modal').addEventListener('click',e=>{if(e.target===document.getElementById('day-modal'))closeModal();});
+
+function setPhase(ph){
+ S.phase=ph;save();
+ document.getElementById('ph-cut').classList.toggle('active',ph==='cut');
+ document.getElementById('ph-mass').classList.toggle('active',ph==='mass');
+ renderNutrition();renderTraining();
+}
+
+function renderNutrition(){
+ const isCut=S.phase==='cut';
+ const cutEnd=new Date('2026-03-25');
+ const reveal=new Date('2026-04-21');
+ const now=new Date();
+ const daysLeft=Math.max(0,Math.ceil((cutEnd-now)/86400000));
+ const daysReveal=Math.max(0,Math.ceil((reveal-now)/86400000));
+ document.getElementById('cut-banner').innerHTML=isCut?`
+   <div class="cut-banner-item"><div class="cut-banner-n">${daysLeft}</div><div class="cut-banner-l">Days Left · Cut</div></div>
+   <div class="cut-banner-item"><div class="cut-banner-n">218.3</div><div class="cut-banner-l">Start Weight</div></div>
+   <div class="cut-banner-item"><div class="cut-banner-n">190</div><div class="cut-banner-l">Goal Weight</div></div>
+   <div class="cut-banner-item"><div class="cut-banner-n">${daysReveal}</div><div class="cut-banner-l">Days to Reveal</div></div>
+ `:'<div style="font-size:12px;color:#888;padding:4px 0">Mass Phase Active — Aggressive Bulk Protocol</div>';
+ let html=`<table class="macro-table"><thead><tr><th>Day</th><th class="p-col">Protein</th><th class="c-col">Carbs</th><th class="f-col">Fat</th></tr></thead><tbody>`;
+ DAYS.forEach(d=>{
+   const m=isCut?d.cutMacros:d.massMacros;
+   const isRest=d.cls==='rest-day';
+   html+=`<tr class="${isRest?'rest-row':''}"><td class="day-col">D${d.day} · ${d.name}</td><td class="p-col">${m.p}g</td><td class="c-col">${m.c}g</td><td class="f-col">${m.f==='—'?'—':m.f+'g'}</td></tr>`;
+ });
+ html+='</tbody></table>';
+ document.getElementById('nutrition-content').innerHTML=html;
+}
+
+function renderLaws(){
+ let html='<div class="law-grid">';
+ STANDING_RULES.forEach(r=>{html+=`<div class="rule-row"><div class="rule-l">${r.l}</div><div class="rule-v${r.zero?' zero':''}">${r.v}</div></div>`;});
+ html+='</div>';
+ html+=`<div class="steam-law"><div class="law-title">★ Steam Law</div><div class="law-body">Activates upon completion if Days 1–4 all proficiently executed. No PM session. No arms. You earned it.</div></div>`;
+ html+=`<div class="recovery-law"><div class="law-title">★ Day 6 Recovery Protocol</div><div class="law-body">Steam → Zero Gravity Chair (15 min) → Shower → Cyclobenzaprine night → Full cycle reset.</div></div>`;
+ html+=`<div class="law-card"><div class="law-title red">Reclamation · Days 7, 8, 9</div><div class="law-body">No resistance training. Light movement only — walks, stretching, Tower Decompression. Day 8: Naproxen protocol active. Day 9 closes the canon. The cycle resets on Day 10.</div></div>`;
+ html+=`<div class="law-card"><div class="law-title">Cut Phase</div><div class="law-body">Started: Feb 14, 2026 · Ends: Mar 25, 2026<br>Start: 218.3 lb · Goal: 190 lb by May 25, 2026<br>Back Reveal: April 21, 2026 — O Sensei Memorial</div></div>`;
+ html+=`<div class="law-card" style="border-color:#2a1a1a"><div class="law-title red">READ ONLY</div><div class="law-body">No changes without Maestro's explicit approval. ATOM Body Physics © 2026.</div></div>`;
+ document.getElementById('laws-content').innerHTML=html;
+}
+
+function renderProgress(){
+ const now=new Date();
+ const cutEnd=new Date('2026-03-25');
+ const reveal=new Date('2026-04-21');
+ const cutStart=new Date('2026-02-14');
+ const totalCutDays=Math.ceil((cutEnd-cutStart)/86400000);
+ const doneInCut=Math.min(totalCutDays,Math.ceil((now-cutStart)/86400000));
+ const cutPct=Math.round(doneInCut/totalCutDays*100);
+ const daysReveal=Math.max(0,Math.ceil((reveal-now)/86400000));
+ const daysLeft=Math.max(0,Math.ceil((cutEnd-now)/86400000));
+ const totalEx=DAYS.flatMap(d=>d.sessions.flatMap(s=>s.exercises)).length;
+ const doneEx=Object.values(S.exDone).filter(Boolean).length;
+ document.getElementById('prog-stats').innerHTML=`
+   <div class="prog-stat"><div class="prog-stat-n">${daysLeft}</div><div class="prog-stat-l">Days Left · Cut</div></div>
+   <div class="prog-stat"><div class="prog-stat-n">${daysReveal}</div><div class="prog-stat-l">Days to Reveal</div></div>
+   <div class="prog-stat"><div class="prog-stat-n">218.3</div><div class="prog-stat-l">Start Weight</div></div>
+   <div class="prog-stat"><div class="prog-stat-n">190</div><div class="prog-stat-l">Goal Weight</div></div>
+ `;
+ document.getElementById('prog-bars').innerHTML=`
+   <div class="prog-bar-wrap">
+     <div class="prog-bar-label"><span>Cut Phase Progress</span><span>${cutPct}%</span></div>
+     <div class="prog-bar"><div class="prog-bar-fill" style="width:${cutPct}%"></div></div>
+   </div>
+   <div class="prog-bar-wrap">
+     <div class="prog-bar-label"><span>Exercises Completed (This Cycle)</span><span>${doneEx} / ${totalEx}</span></div>
+     <div class="prog-bar"><div class="prog-bar-fill" style="width:${Math.round(doneEx/totalEx*100)}%"></div></div>
+   </div>
+   <div class="law-card" style="margin-top:10px"><div class="law-title">Back Reveal</div><div class="law-body">April 21, 2026 — O Sensei Memorial<br>${daysReveal} days away. Protect the work.</div></div>
+ `;
+}
+
+function toast(msg,type=''){
+ const t=document.getElementById('toast');
+ t.textContent=msg;t.className='toast '+(type==='green'?'green ':'')+'show';
+ clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2200);
+}
+
+if(CHECKS.every(c=>S.checks[c.id])){
+ document.getElementById('entry').style.display='none';
+ document.getElementById('app').style.display='flex';
+ renderTraining();renderNutrition();renderLaws();renderProgress();
+} else {
+ renderChecks();
+}
+</script>
+
+</body>
+</html>
